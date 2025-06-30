@@ -2,7 +2,7 @@ import express from 'express';
 import resend from 'resend';
 
 const router = express.Router();
-resend.api_key = "re_La1u5jsm_PNHCHVULz6Y6qTRwLvPuccrY";
+resend.api_key = process.env.REACT_APP_RESEND_API_KEY;
 
 router.post('/', async (req, res) => {
   const { to, from, subject, html } = req.body;
