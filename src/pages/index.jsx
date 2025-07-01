@@ -63,7 +63,8 @@ function PagesContent() {
         <Layout currentPageName={currentPage}>
             <Routes>            
                 <Route path="/login" element={<Login />} />
-                <Route path="/TakeChallenge" element={<TakeChallenge />} />
+                <Route path="/TakeChallenge/:interviewId" element={<TakeChallenge />} />
+                <Route path="/take-challenge/:interviewId" element={<TakeChallenge />} />
                 <Route path="/" element={<RequireAuth><Dashboard /></RequireAuth>} />
                 <Route path="/Dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
                 <Route path="/Challenges" element={<RequireAuth><Challenges /></RequireAuth>} />

@@ -42,8 +42,9 @@ export default function AccountInfo() {
     fetchInfo();
   }, []);
 
+  if (!user) return null;
   if (loading) return <div className="p-4 text-sm text-gray-500">Loading account info...</div>;
-  if (error) return <div className="p-4 text-sm text-red-600">{error}</div>;
+  if (error) return null;
 
   return (
     <div className="p-4 border rounded bg-gray-50 max-w-md">

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { fetchInterviewById, updateInterview, fetchChallengeById } from '@/api/entities';
+import { fetchInterviewById, updateInterview, fetchChallengeById, uploadSubmissionFile } from '@/api/entities';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -38,19 +38,23 @@ const CountdownTimer = ({ expiryTimestamp, onExpire }) => {
     });
 
     const timerComponents = [];
-    Object.keys(timeLeft).forEach(interval => {
+    Object.keys(timeLeft).forEach((interval, idx, arr) => {
         if (!timeLeft[interval] && interval !== 'seconds' && timerComponents.length === 0) return;
         timerComponents.push(
             <span key={interval} className="text-2xl font-mono">
-                {String(timeLeft[interval]).padStart(2, '0')}
-                {interval[0]}
+                {String(timeLeft[interval]).padStart(2, '0')}{interval[0]}
             </span>
         );
+        if (idx < arr.length - 1) {
+            timerComponents.push(
+                <span key={interval + '-sep'} className="text-2xl font-mono mx-1">:</span>
+            );
+        }
     });
 
     return (
         <div className="flex gap-2">
-            {timerComponents.length ? timerComponents.join(' : ') : <span>Time's up!</span>}
+            {timerComponents.length ? timerComponents : <span>Time's up!</span>}
         </div>
     );
 };
@@ -71,11 +75,10 @@ export default function TakeChallengePage() {
             try {
                 const interviewData = await fetchInterviewById(interviewId);
                 if (!interviewData) {
-                    setError('Interview not found.');
+                    setError('Interview not found. Please check your link or contact your recruiter.');
                     setIsLoading(false);
                     return;
                 }
-                
                 if (new Date() > new Date(interviewData.expires_date) && interviewData.status === 'sent') {
                     await updateInterview(interviewData.id, { status: 'expired' });
                     setError('This challenge link has expired.');
@@ -83,21 +86,26 @@ export default function TakeChallengePage() {
                     setIsLoading(false);
                     return;
                 }
-
                 setInterview(interviewData);
-
                 const challengeData = await fetchChallengeById(interviewData.challenge_id);
+                if (!challengeData) {
+                    setError('Challenge not found. Please contact your recruiter.');
+                    setIsLoading(false);
+                    return;
+                }
                 setChallenge(challengeData);
             } catch (e) {
-                setError('Failed to load challenge details.');
+                setError('Failed to load challenge details. Please try again later or contact support.');
                 console.error(e);
             } finally {
                 setIsLoading(false);
             }
         };
-
         if (interviewId) {
             loadData();
+        } else {
+            setError('Invalid challenge link.');
+            setIsLoading(false);
         }
     }, [interviewId]);
 
@@ -115,10 +123,11 @@ export default function TakeChallengePage() {
         }
         setIsSubmitting(true);
         try {
-            // const { file_url } = await UploadFile({ file: submissionFile }); // TODO: Implement file upload
+            // Upload the file to Supabase Storage
+            const fileUrl = await uploadSubmissionFile(submissionFile, interview.id);
             await updateInterview(interview.id, {
                 status: 'submitted',
-                submission_zip_url: submissionFile.url,
+                submission_zip_url: fileUrl,
                 submission_instructions: submissionInstructions,
                 submitted_date: new Date().toISOString()
             });

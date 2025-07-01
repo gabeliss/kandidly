@@ -6,6 +6,7 @@ import { Calendar, Clock, User, Building, ExternalLink, Star, Brain, Download, F
 import { format, parseISO, formatDistanceToNow } from "date-fns";
 import { updateInterview } from '@/api/entities';
 import { Skeleton } from '@/components/ui/skeleton';
+import { getUser } from '../../api/auth';
 
 export default function InterviewDetails({ interview, challenges, onUpdate }) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);

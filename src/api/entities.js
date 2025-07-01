@@ -64,3 +64,20 @@ export async function deleteInterview(id) {
   const { error } = await supabase.from('interview').delete().eq('id', id);
   if (error) throw error;
 }
+
+// Upload a submission file to Supabase Storage
+export async function uploadSubmissionFile(file, interviewId) {
+  const bucket = 'submissions';
+  const filePath = `${interviewId}/${Date.now()}_${file.name}`;
+  const { data, error } = await supabase.storage.from(bucket).upload(filePath, file, {
+    cacheControl: '3600',
+    upsert: true,
+    contentType: file.type,
+  });
+  if (error) throw error;
+
+  // Get the public URL
+  const { data: publicUrlData } = supabase.storage.from(bucket).getPublicUrl(filePath);
+  if (!publicUrlData || !publicUrlData.publicUrl) throw new Error('Failed to get public URL for uploaded file');
+  return publicUrlData.publicUrl;
+}
